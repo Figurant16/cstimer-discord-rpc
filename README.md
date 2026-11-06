@@ -10,7 +10,7 @@ ao5: 12.34 • ao12: 13.00
 Last solve: 11.22
 ```
 
-The project runs on macOS with the Discord desktop app and a Chromium-based browser: Chrome, Chromium, Brave, Edge, Vivaldi, Arc, Opera or Helium. Only Helium has been tested end to end. It has no npm dependencies.
+The project runs on macOS, Linux and Windows with the Discord desktop app and a Chromium-based browser: Chrome, Chromium, Brave, Edge, Vivaldi, Arc, Opera or Helium. Only macOS with Helium has been tested end to end. Linux and Windows support is untested. It has no npm dependencies.
 
 ## Language
 
@@ -37,7 +37,12 @@ You need Node.js, a Chromium-based browser and the Discord desktop app.
 1. Create an application on the [Discord Developer Portal](https://discord.com/developers/applications). Its name becomes the title shown on your profile.
 2. Copy its **Application ID**, then run:
    ```sh
+   # macOS and Linux
    ./install.sh <application_id>
+   ```
+   ```powershell
+   # Windows
+   powershell -ExecutionPolicy Bypass -File install.ps1 <application_id>
    ```
 3. In your browser, open `chrome://extensions`, enable developer mode, click **Load unpacked** and select the `extension` folder.
 4. Reload cstimer.net with the Discord app open.
@@ -48,14 +53,29 @@ You need Node.js, a Chromium-based browser and the Discord desktop app.
 CHROMIUM_DATA_DIR="$HOME/Library/Application Support/MyBrowser" ./install.sh <application_id>
 ```
 
-The generated files store the project path and the Node.js path. If either changes, run `install.sh` again and reload the extension.
+On Windows, `install.ps1` registers the host in the registry for Chrome, Chromium, Brave, Edge and Vivaldi. For another browser, pass its registry key:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File install.ps1 <application_id> -RegistryKey 'Vendor\Browser'
+```
+
+On Linux, browsers installed through Snap or Flatpak are sandboxed and may refuse to start the host. Discord itself can be installed either way.
+
+The generated files store the project path and the Node.js path. If either changes, run the installer again and reload the extension.
 
 ## Uninstall
 
 1. Remove the extension from `chrome://extensions`.
 2. Delete the manifests:
    ```sh
+   # macOS
    find "$HOME/Library/Application Support" -path '*/NativeMessagingHosts/local.cstimer_discord_rpc.json' -delete
+   # Linux
+   find "${XDG_CONFIG_HOME:-$HOME/.config}" -path '*/NativeMessagingHosts/local.cstimer_discord_rpc.json' -delete
+   ```
+   ```powershell
+   # Windows
+   powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
    ```
 3. Delete the project folder.
 
@@ -72,7 +92,7 @@ The generated files store the project path and the Node.js path. If either chang
 |---|---|
 | Nothing on Discord | The Discord desktop app is open and activity sharing is enabled in its settings. |
 | Still nothing on Discord | In `chrome://extensions`, open the extension's service worker and read its console. |
-| `Specified native messaging host not found` | `install.sh` was not run, or the folder was moved. |
+| `Specified native messaging host not found` | The installer was not run, or the folder was moved. |
 | `Access to the specified native messaging host is forbidden` | The extension ID does not match: the `key` field in `manifest.json` changed. |
 
 ## Project layout
@@ -91,7 +111,8 @@ host/
   discord-ipc.js       Discord socket client with reconnect
   native-messaging.js  Native Messaging protocol
 test/                  unit and end-to-end tests
-install.sh             native host installer
+install.sh             installer for macOS and Linux
+install.ps1            installer for Windows
 ```
 
 ## Tests
