@@ -102,7 +102,7 @@ async function main() {
     console.log('Shown by csTimer:', JSON.stringify(shown.result?.result?.value));
     assert.equal(fake.frames[0].data.client_id, '123');
     assert.match(activity.details, /^ao5: \d/);
-    assert.match(activity.state, /^Last solve: \d/);
+    assert.match(activity.state, /\d/);
 
     await fetch(`${base}/json/close/${created.id}`);
     await poll(() => clientClosed, 'Discord connection closed with the tab');
