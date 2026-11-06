@@ -25,7 +25,7 @@ async function startDiscord(t, dir) {
 const exited = (p) => new Promise((r) => p.on('exit', r));
 const isActivity = (f) => f.data.cmd === 'SET_ACTIVITY';
 
-test('transforme un message de l’extension en statut Discord', async (t) => {
+test('turns an extension message into a Discord status', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dhost-'));
   const fake = await startDiscord(t, dir);
   const host = startHost(t, dir);
@@ -37,7 +37,7 @@ test('transforme un message de l’extension en statut Discord', async (t) => {
   await exited(host);
 });
 
-test('garde le même début de session entre deux résolutions', async (t) => {
+test('keeps the same session start across solves', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dhost-'));
   const fake = await startDiscord(t, dir);
   const host = startHost(t, dir);
@@ -51,14 +51,14 @@ test('garde le même début de session entre deux résolutions', async (t) => {
   await exited(host);
 });
 
-test('s’arrête quand le navigateur ferme la connexion', async (t) => {
+test('exits when the browser closes the connection', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dhost-'));
   const host = startHost(t, dir);
   host.stdin.end();
   assert.equal(await exited(host), 0);
 });
 
-test('reste en vie quand Discord est fermé', async (t) => {
+test('stays alive when Discord is closed', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dhost-'));
   const host = startHost(t, dir);
   const done = exited(host);
@@ -69,7 +69,7 @@ test('reste en vie quand Discord est fermé', async (t) => {
   assert.equal(await done, 0);
 });
 
-test('n’écrit jamais sur stdout, réservé au protocole du navigateur', async (t) => {
+test('never writes to stdout, reserved for the browser protocol', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dhost-'));
   const host = startHost(t, dir);
   let out = '';

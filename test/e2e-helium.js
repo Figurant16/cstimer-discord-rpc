@@ -1,5 +1,5 @@
-// Test de bout en bout : vrai Helium (profil jetable), vrai cstimer.net, faux Discord.
-// Lancement : node test/e2e-helium.js
+// End-to-end test: real Helium (throwaway profile), real cstimer.net, fake Discord.
+// Run with: node test/e2e-helium.js
 const assert = require('node:assert/strict');
 const { execFileSync, spawn } = require('node:child_process');
 const fs = require('node:fs');
@@ -19,7 +19,7 @@ async function poll(fn, what, timeout = 30000) {
     if (value) return value;
     await sleep(200);
   }
-  throw new Error(`Délai dépassé : ${what}`);
+  throw new Error(`Timed out: ${what}`);
 }
 
 function cdp(url) {
@@ -78,7 +78,7 @@ async function main() {
 
   try {
     const portFile = path.join(profile, 'DevToolsActivePort');
-    const port = await poll(() => fs.existsSync(portFile) && fs.readFileSync(portFile, 'utf8').split('\n')[0], 'port CDP');
+    const port = await poll(() => fs.existsSync(portFile) && fs.readFileSync(portFile, 'utf8').split('\n')[0], 'CDP port');
     const base = `http://127.0.0.1:${port}`;
     const created = await (await fetch(`${base}/json/new?https://cstimer.net/`, { method: 'PUT' })).json();
     const page = cdp(created.webSocketDebuggerUrl);
@@ -87,25 +87,25 @@ async function main() {
     const loaded = await poll(async () => {
       const r = await page.send('Runtime.evaluate', { expression: 'typeof kernel + "/" + document.readyState' });
       return r.result?.result?.value === 'object/complete';
-    }, 'chargement de cstimer.net');
+    }, 'cstimer.net load');
     assert.ok(loaded);
     await sleep(3000);
-    console.log('Trames après chargement :', fake.frames.filter(isActivity).length);
+    console.log('Frames after load:', fake.frames.filter(isActivity).length);
 
     for (let i = 0; i < 6; i += 1) { await solve(page); await sleep(500); }
-    const frame = await poll(() => fake.frames.filter(isActivity).at(-1), 'statut reçu par Discord');
+    const frame = await poll(() => fake.frames.filter(isActivity).at(-1), 'status received by Discord');
     const { activity } = frame.data.args;
-    console.log('Dernier statut :', JSON.stringify(activity));
+    console.log('Latest status:', JSON.stringify(activity));
     const shown = await page.send('Runtime.evaluate', { expression: 'document.getElementById("avgstr")?.innerText' });
-    console.log('Affiché par csTimer :', JSON.stringify(shown.result?.result?.value));
+    console.log('Shown by csTimer:', JSON.stringify(shown.result?.result?.value));
     assert.equal(fake.frames[0].data.client_id, '123');
     assert.match(activity.details, /^ao5: \d/);
     assert.match(activity.state, /^Last solve: \d/);
 
     await fetch(`${base}/json/close/${created.id}`);
-    await poll(() => clientClosed, 'connexion Discord fermée à la fermeture de l’onglet');
-    console.log('Onglet fermé : connexion Discord coupée.');
-    console.log('E2E OK');
+    await poll(() => clientClosed, 'Discord connection closed with the tab');
+    console.log('Tab closed: Discord connection dropped.');
+    console.log('E2E passed');
   } finally {
     browser.kill();
     await fake.close();

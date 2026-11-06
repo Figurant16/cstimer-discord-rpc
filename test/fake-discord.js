@@ -1,4 +1,4 @@
-// Faux serveur IPC Discord pour les tests : vrai socket Unix, même format de trame.
+// Fake Discord IPC server for tests: real Unix socket, same frame format.
 const net = require('node:net');
 
 function startFakeDiscord(path) {

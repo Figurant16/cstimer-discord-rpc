@@ -9,7 +9,7 @@ const { startFakeDiscord } = require('./fake-discord');
 const sockDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'dipc-'));
 const isActivity = (f) => f.data.cmd === 'SET_ACTIVITY';
 
-test('fait le handshake avec le client_id avant d’envoyer l’activité', async () => {
+test('handshakes with client_id before sending the activity', async () => {
   const dir = sockDir();
   const fake = startFakeDiscord(path.join(dir, 'discord-ipc-0'));
   await fake.listen();
@@ -22,7 +22,7 @@ test('fait le handshake avec le client_id avant d’envoyer l’activité', asyn
   await fake.close();
 });
 
-test('essaie les sockets suivants si discord-ipc-0 n’existe pas', async () => {
+test('tries later sockets when discord-ipc-0 is missing', async () => {
   const dir = sockDir();
   const fake = startFakeDiscord(path.join(dir, 'discord-ipc-3'));
   await fake.listen();
@@ -33,12 +33,12 @@ test('essaie les sockets suivants si discord-ipc-0 n’existe pas', async () => 
   await fake.close();
 });
 
-test('échoue proprement quand Discord n’est pas lancé', async () => {
+test('fails cleanly when Discord is not running', async () => {
   const c = new DiscordClient('123', { dir: sockDir() });
   await assert.rejects(c.setActivity({ details: 'x' }), /Discord/);
 });
 
-test('se reconnecte à l’envoi suivant après une coupure de Discord', async () => {
+test('reconnects on the next send after Discord drops', async () => {
   const dir = sockDir();
   const fake = startFakeDiscord(path.join(dir, 'discord-ipc-0'));
   await fake.listen();

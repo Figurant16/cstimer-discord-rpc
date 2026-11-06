@@ -22,7 +22,7 @@ function load(kernelAvailableAfter = 0) {
   return { posted, listeners, window, kernel, tick: () => timers.shift()?.() };
 }
 
-test('publie les moyennes et le dernier temps à chaque signal avg', () => {
+test('posts averages and the last solve on each avg signal', () => {
   const { posted, listeners } = load();
   listeners.avg('avg', ['ao5: 12.34', 'ao12: 13.00', null, null, null, [[0, 11220], 'R U', '', 1], null]);
   const msg = JSON.parse(JSON.stringify(posted[0]));
@@ -30,13 +30,13 @@ test('publie les moyennes et le dernier temps à chaque signal avg', () => {
   assert.deepEqual(msg.payload, { avg1: 'ao5: 12.34', avg2: 'ao12: 13.00', last: [0, 11220] });
 });
 
-test('omet le dernier temps pour une session vide', () => {
+test('omits the last solve for an empty session', () => {
   const { posted, listeners } = load();
   listeners.avg('avg', ['ao5: -', 'ao12: -', null, null, null, undefined, null]);
   assert.equal(posted[0].payload.last, undefined);
 });
 
-test('attend que kernel existe avant de s’abonner', () => {
+test('waits for kernel before subscribing', () => {
   const h = load(1);
   assert.equal(h.listeners.avg, undefined);
   h.window.kernel = h.kernel;
