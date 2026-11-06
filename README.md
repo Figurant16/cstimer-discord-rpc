@@ -91,3 +91,7 @@ node test/e2e-helium.js   # real Helium (throwaway profile) and real cstimer.net
 ```
 
 `e2e-helium.js` uses a fake Discord and a temporary profile, so it touches neither your status nor your Helium profile.
+
+## License
+
+[MIT](LICENSE)
