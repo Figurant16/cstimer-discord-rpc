@@ -1,10 +1,10 @@
 #!/bin/sh
-# Usage : ./install.sh <application_id_discord>
+# Usage: ./install.sh <discord_application_id>
 set -eu
 
 CLIENT_ID="${1:-}"
 case "$CLIENT_ID" in
-  ''|*[!0-9]*) echo "Usage : ./install.sh <application_id_discord>" >&2; exit 1 ;;
+  ''|*[!0-9]*) echo "Usage: ./install.sh <discord_application_id>" >&2; exit 1 ;;
 esac
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -15,7 +15,7 @@ NODE="$(command -v node)"
 
 printf '{ "clientId": "%s" }\n' "$CLIENT_ID" > "$ROOT/host/config.json"
 
-# Une app lancée depuis le Dock n'a pas le PATH du terminal : on fige le chemin de node.
+# Apps launched from the Dock do not get the terminal PATH, so pin the node path.
 cat > "$ROOT/host/run.sh" <<RUN
 #!/bin/sh
 exec "$NODE" "$ROOT/host/host.js"
@@ -33,4 +33,4 @@ cat > "$DATA_DIR/NativeMessagingHosts/$HOST_NAME.json" <<MANIFEST
 }
 MANIFEST
 
-echo "Programme local installé pour Helium."
+echo "Native host installed for Helium."

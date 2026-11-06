@@ -1,4 +1,4 @@
-// Relaie les stats de la page vers le service worker de l'extension.
+// Relays page stats to the extension service worker.
 let port = null;
 let lastPayload = null;
 
@@ -6,7 +6,7 @@ function connect() {
   port = chrome.runtime.connect();
   port.onDisconnect.addListener(() => {
     port = null;
-    // Chromium peut arrêter le service worker : on se reconnecte et on renvoie l'état.
+    // Chromium may stop the service worker: reconnect and resend the state.
     setTimeout(() => {
       if (!chrome.runtime?.id) return;
       connect();

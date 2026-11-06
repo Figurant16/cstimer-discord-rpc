@@ -1,4 +1,4 @@
-// Protocole Native Messaging de Chromium : longueur sur 4 octets, puis JSON.
+// Chromium Native Messaging protocol: 4-byte length, then JSON.
 function encode(message) {
   const json = Buffer.from(JSON.stringify(message));
   const head = Buffer.alloc(4);

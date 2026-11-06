@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "csTimer Discord RPC",
   "version": "1.0.0",
-  "description": "Affiche ao5, ao12 et le dernier temps de csTimer dans le statut Discord.",
+  "description": "Shows your csTimer ao5, ao12 and last solve in your Discord status.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApuroOnWe2Qv9k9KGTKq4Q6ln+tGxes8awVe45wjAfPxDKTBJw3gVvHDtuGxSRQI9X+HcGF8SsttdWNpEye5iSgJyMZF6BdWB5ynkWWabmAkCnROEzIM6gnZzRSgsLO9KCm77BGE/GhyfztAvuDueBAfXyeEOQqTsZEg6QkC4vEojDfvsAT3sV7vFAEhPP3ulUlCEfU+fpqrAVA+am4AGTW1eeayuA091mxxovLgnW5/b1DkdLAaAlkvEpv8OZvJCmsEicToXmoPLDMq/HsvWQq9l32/+TxgfQGU2HDUt6+dBMyJBrw7bRcuZeptDBLYYrsYPpj41bceejXO84IgHVQIDAQAB",
   "permissions": ["nativeMessaging"],
   "background": { "service_worker": "background.js" },

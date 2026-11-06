@@ -6,7 +6,7 @@ function openHost() {
   if (host) return host;
   host = chrome.runtime.connectNative(HOST_NAME);
   host.onDisconnect.addListener(() => {
-    console.warn('Programme local déconnecté :', chrome.runtime.lastError?.message);
+    console.warn('Native host disconnected:', chrome.runtime.lastError?.message);
     host = null;
   });
   return host;
@@ -18,7 +18,7 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onDisconnect.addListener(() => {
     tabs.delete(port);
     if (tabs.size === 0 && host) {
-      // Fermer le programme local coupe sa connexion, et Discord retire le statut.
+      // Closing the native host drops its connection, so Discord clears the status.
       host.disconnect();
       host = null;
     }

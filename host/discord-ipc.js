@@ -37,7 +37,7 @@ class DiscordClient {
       args: { pid: process.pid, activity },
       nonce: crypto.randomUUID(),
     });
-    if (reply.evt === 'ERROR') throw new Error(`Discord : ${reply.data?.message}`);
+    if (reply.evt === 'ERROR') throw new Error(`Discord: ${reply.data?.message}`);
   }
 
   close() {
@@ -55,7 +55,7 @@ class DiscordClient {
         if (err.code !== 'ENOENT' && err.code !== 'ECONNREFUSED') throw err;
       }
     }
-    throw new Error('Discord n’est pas lancé');
+    throw new Error('Discord is not running');
   }
 
   #attach(sock) {
@@ -65,7 +65,7 @@ class DiscordClient {
     sock.on('error', () => {});
     sock.on('close', () => {
       this.#sock = null;
-      this.#settle(new Error('Discord a fermé la connexion'));
+      this.#settle(new Error('Discord closed the connection'));
       this.onClose?.();
     });
   }
@@ -78,7 +78,7 @@ class DiscordClient {
       const op = this.#buffer.readInt32LE(0);
       const data = JSON.parse(this.#buffer.subarray(8, end));
       this.#buffer = this.#buffer.subarray(end);
-      if (op === OP_CLOSE) this.#settle(new Error(`Discord a refusé la connexion : ${data.message}`));
+      if (op === OP_CLOSE) this.#settle(new Error(`Discord rejected the connection: ${data.message}`));
       else this.#settle(null, data);
     }
   }
@@ -94,7 +94,7 @@ class DiscordClient {
   #request(op, payload) {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
-        () => this.#settle(new Error('Discord ne répond pas')),
+        () => this.#settle(new Error('Discord is not responding')),
         REPLY_TIMEOUT_MS,
       );
       this.#pending = { resolve, reject, timer };

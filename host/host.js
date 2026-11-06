@@ -11,7 +11,7 @@ function readClientId() {
   return JSON.parse(fs.readFileSync(file, 'utf8')).clientId;
 }
 
-// stdout appartient au protocole du navigateur : les journaux passent par stderr.
+// stdout belongs to the browser protocol, so logs go to stderr.
 const discord = new DiscordClient(readClientId());
 const decoder = new Decoder();
 const startedAt = Date.now();

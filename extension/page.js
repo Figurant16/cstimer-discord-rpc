@@ -1,4 +1,4 @@
-// Tourne dans la page pour accéder au kernel global de csTimer.
+// Runs in the page to reach csTimer's global kernel.
 (function attach() {
   const { kernel } = window;
   if (!kernel?.regListener) {
