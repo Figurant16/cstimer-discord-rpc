@@ -8,9 +8,13 @@ const { STRINGS } = require('../host/languages');
 const read = (file) => fs.readFileSync(path.join(__dirname, '../extension', file), 'utf8');
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-function fakeChrome({ language, uiLanguage = 'en-US' } = {}) {
-  const store = language ? { language } : {};
+function fakeChrome({ language, enabled, uiLanguage = 'en-US' } = {}) {
+  const store = {
+    ...(language ? { language } : {}),
+    ...(enabled === undefined ? {} : { enabled }),
+  };
   const sent = [];
+  const host = { open: false };
   const events = {};
   const hook = (name) => ({ addListener: (fn) => { events[name] = fn; } });
   const chrome = {
@@ -18,11 +22,14 @@ function fakeChrome({ language, uiLanguage = 'en-US' } = {}) {
     runtime: {
       lastError: null,
       onConnect: hook('connect'),
-      connectNative: () => ({
-        postMessage: (m) => sent.push(JSON.parse(JSON.stringify(m))),
-        onDisconnect: hook('hostDisconnect'),
-        disconnect: () => {},
-      }),
+      connectNative: () => {
+        host.open = true;
+        return {
+          postMessage: (m) => sent.push(JSON.parse(JSON.stringify(m))),
+          onDisconnect: hook('hostDisconnect'),
+          disconnect: () => { host.open = false; },
+        };
+      },
     },
     storage: {
       onChanged: hook('storageChanged'),
@@ -35,7 +42,7 @@ function fakeChrome({ language, uiLanguage = 'en-US' } = {}) {
       },
     },
   };
-  return { chrome, sent, events, store };
+  return { chrome, sent, events, store, host };
 }
 
 function connectTab(events) {
@@ -61,17 +68,21 @@ function loadPopup(options) {
     append(option) { this.options.push(option); },
     addEventListener(_type, fn) { this.onChange = fn; },
   };
+  const toggle = {
+    checked: false,
+    addEventListener(_type, fn) { this.onChange = fn; },
+  };
   const context = {
     chrome: fake.chrome,
     document: {
-      getElementById: () => select,
+      getElementById: (id) => (id === 'enabled' ? toggle : select),
       createElement: () => ({}),
     },
   };
   vm.createContext(context);
   vm.runInContext(read('languages.js'), context);
   vm.runInContext(read('popup.js'), context);
-  return { ...fake, select, context };
+  return { ...fake, select, toggle, context };
 }
 
 test('the menu lists every translated language', () => {
@@ -138,4 +149,51 @@ test('the menu saves the selected language', async () => {
   select.value = 'zh';
   await select.onChange();
   assert.equal(store.language, 'zh');
+});
+
+test('does not start the host while the status is disabled', async () => {
+  const { events, sent, host } = loadBackground({ enabled: false });
+  connectTab(events).message({ avg1: 'ao5: 1' });
+  await settle();
+  assert.equal(sent.length, 0);
+  assert.equal(host.open, false);
+});
+
+test('disabling stops the host, which clears the status', async () => {
+  const { chrome, events, host } = loadBackground();
+  connectTab(events).message({ avg1: 'ao5: 1' });
+  await settle();
+  assert.equal(host.open, true);
+  await chrome.storage.local.set({ enabled: false });
+  await settle();
+  assert.equal(host.open, false);
+});
+
+test('enabling again restores the latest stats', async () => {
+  const { chrome, events, sent } = loadBackground({ enabled: false, language: 'de' });
+  connectTab(events).message({ avg1: 'ao5: 1' });
+  await settle();
+  await chrome.storage.local.set({ enabled: true });
+  await settle();
+  assert.deepEqual(sent, [{ avg1: 'ao5: 1', language: 'de' }]);
+});
+
+test('the toggle is on by default', async () => {
+  const { toggle } = loadPopup();
+  await settle();
+  assert.equal(toggle.checked, true);
+});
+
+test('the toggle shows the saved state', async () => {
+  const { toggle } = loadPopup({ enabled: false });
+  await settle();
+  assert.equal(toggle.checked, false);
+});
+
+test('the toggle saves its state', async () => {
+  const { toggle, store } = loadPopup();
+  await settle();
+  toggle.checked = false;
+  await toggle.onChange();
+  assert.equal(store.enabled, false);
 });

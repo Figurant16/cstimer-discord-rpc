@@ -1,4 +1,5 @@
 const select = document.getElementById('language');
+const toggle = document.getElementById('enabled');
 
 for (const { code, name } of LANGUAGES) {
   const option = document.createElement('option');
@@ -13,7 +14,9 @@ function browserLanguage() {
 }
 
 select.addEventListener('change', () => chrome.storage.local.set({ language: select.value }));
+toggle.addEventListener('change', () => chrome.storage.local.set({ enabled: toggle.checked }));
 
-chrome.storage.local.get('language').then(({ language }) => {
+chrome.storage.local.get(['language', 'enabled']).then(({ language, enabled = true }) => {
   select.value = language || browserLanguage();
+  toggle.checked = enabled;
 });

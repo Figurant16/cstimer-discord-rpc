@@ -13,10 +13,20 @@ function openHost() {
   return host;
 }
 
+function closeHost() {
+  if (!host) return;
+  host.disconnect();
+  host = null;
+}
+
 async function publish() {
   if (!lastPayload) return;
-  const { language } = await chrome.storage.local.get('language');
+  const { language, enabled = true } = await chrome.storage.local.get(['language', 'enabled']);
   if (!lastPayload) return;
+  if (!enabled) {
+    closeHost();
+    return;
+  }
   openHost().postMessage({ ...lastPayload, language: language || chrome.i18n.getUILanguage() });
 }
 
@@ -32,10 +42,7 @@ chrome.runtime.onConnect.addListener((port) => {
     tabs.delete(port);
     if (tabs.size > 0) return;
     lastPayload = null;
-    if (host) {
-      // Closing the native host drops its connection, so Discord clears the status.
-      host.disconnect();
-      host = null;
-    }
+    // Closing the native host drops its connection, so Discord clears the status.
+    closeHost();
   });
 });

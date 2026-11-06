@@ -7,11 +7,13 @@
       body { margin: 0; padding: 12px; width: 180px; font: 13px system-ui, sans-serif; }
       label { display: block; margin-bottom: 6px; }
       select { width: 100%; padding: 4px; font: inherit; }
+      .toggle { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; }
     </style>
   </head>
   <body>
     <label for="language">Discord status language</label>
     <select id="language"></select>
+    <label class="toggle"><input id="enabled" type="checkbox">Show on Discord</label>
     <script src="languages.js"></script>
     <script src="popup.js"></script>
   </body>
