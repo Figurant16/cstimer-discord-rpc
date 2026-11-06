@@ -10,6 +10,8 @@ The project runs on macOS, Linux and Windows with the Discord desktop app and a 
 
 The status follows your browser language by default. To change it, click the extension icon and pick one of the 10 available languages: English, French, Spanish, German, Portuguese, Italian, Russian, Chinese, Japanese or Korean.
 
+To hide the status without closing csTimer, turn off **Show on Discord** in the same menu.
+
 ## How it works
 
 An extension alone cannot talk to the Discord app, so the project has two parts:
