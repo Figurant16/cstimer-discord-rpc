@@ -1,0 +1,110 @@
+const crypto = require('node:crypto');
+const net = require('node:net');
+const os = require('node:os');
+const path = require('node:path');
+
+const OP_HANDSHAKE = 0;
+const OP_FRAME = 1;
+const OP_CLOSE = 2;
+const SOCKET_COUNT = 10;
+const REPLY_TIMEOUT_MS = 5000;
+
+function connectSocket(file) {
+  return new Promise((resolve, reject) => {
+    const sock = net.createConnection(file);
+    sock.once('connect', () => { sock.removeListener('error', reject); resolve(sock); });
+    sock.once('error', reject);
+  });
+}
+
+class DiscordClient {
+  #clientId;
+  #dir;
+  #sock = null;
+  #buffer = Buffer.alloc(0);
+  #pending = null;
+  onClose = null;
+
+  constructor(clientId, { dir = process.env.XDG_RUNTIME_DIR || os.tmpdir() } = {}) {
+    this.#clientId = clientId;
+    this.#dir = dir;
+  }
+
+  async setActivity(activity) {
+    if (!this.#sock) await this.#connect();
+    const reply = await this.#request(OP_FRAME, {
+      cmd: 'SET_ACTIVITY',
+      args: { pid: process.pid, activity },
+      nonce: crypto.randomUUID(),
+    });
+    if (reply.evt === 'ERROR') throw new Error(`Discord : ${reply.data?.message}`);
+  }
+
+  close() {
+    this.#sock?.destroy();
+  }
+
+  async #connect() {
+    for (let i = 0; i < SOCKET_COUNT; i += 1) {
+      try {
+        this.#attach(await connectSocket(path.join(this.#dir, `discord-ipc-${i}`)));
+        await this.#request(OP_HANDSHAKE, { v: 1, client_id: this.#clientId });
+        return;
+      } catch (err) {
+        this.close();
+        if (err.code !== 'ENOENT' && err.code !== 'ECONNREFUSED') throw err;
+      }
+    }
+    throw new Error('Discord n’est pas lancé');
+  }
+
+  #attach(sock) {
+    this.#sock = sock;
+    this.#buffer = Buffer.alloc(0);
+    sock.on('data', (chunk) => this.#onData(chunk));
+    sock.on('error', () => {});
+    sock.on('close', () => {
+      this.#sock = null;
+      this.#settle(new Error('Discord a fermé la connexion'));
+      this.onClose?.();
+    });
+  }
+
+  #onData(chunk) {
+    this.#buffer = Buffer.concat([this.#buffer, chunk]);
+    while (this.#buffer.length >= 8) {
+      const end = 8 + this.#buffer.readInt32LE(4);
+      if (this.#buffer.length < end) break;
+      const op = this.#buffer.readInt32LE(0);
+      const data = JSON.parse(this.#buffer.subarray(8, end));
+      this.#buffer = this.#buffer.subarray(end);
+      if (op === OP_CLOSE) this.#settle(new Error(`Discord a refusé la connexion : ${data.message}`));
+      else this.#settle(null, data);
+    }
+  }
+
+  #settle(err, value) {
+    const pending = this.#pending;
+    if (!pending) return;
+    this.#pending = null;
+    clearTimeout(pending.timer);
+    if (err) pending.reject(err); else pending.resolve(value);
+  }
+
+  #request(op, payload) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => this.#settle(new Error('Discord ne répond pas')),
+        REPLY_TIMEOUT_MS,
+      );
+      this.#pending = { resolve, reject, timer };
+      const json = Buffer.from(JSON.stringify(payload));
+      const head = Buffer.alloc(8);
+      head.writeInt32LE(op, 0);
+      head.writeInt32LE(json.length, 4);
+      this.#sock.write(Buffer.concat([head, json]));
+    });
+  }
+}
+
+module.exports = { DiscordClient };
