@@ -1,5 +1,5 @@
-// End-to-end test: real Helium (throwaway profile), real cstimer.net, fake Discord.
-// Run with: node test/e2e-helium.js
+// End-to-end test: real browser (throwaway profile), real cstimer.net, fake Discord.
+// Run with: BROWSER_BINARY=/path/to/browser node test/e2e-browser.js
 const assert = require('node:assert/strict');
 const { execFileSync, spawn } = require('node:child_process');
 const fs = require('node:fs');
@@ -8,7 +8,7 @@ const path = require('node:path');
 const { startFakeDiscord } = require('./fake-discord');
 
 const ROOT = path.join(__dirname, '..');
-const HELIUM = '/Applications/Helium.app/Contents/MacOS/Helium';
+const BROWSER = process.env.BROWSER_BINARY || '/Applications/Helium.app/Contents/MacOS/Helium';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const isActivity = (f) => f.data.cmd === 'SET_ACTIVITY';
 
@@ -60,16 +60,18 @@ async function main() {
   const sockDir = path.join(work, 's');
   fs.mkdirSync(sockDir);
 
-  const backupConfig = path.join(ROOT, 'host/config.json');
-  const hadConfig = fs.existsSync(backupConfig) ? fs.readFileSync(backupConfig) : null;
-  execFileSync(path.join(ROOT, 'install.sh'), ['123'], { env: { ...process.env, HELIUM_DATA_DIR: profile } });
+  // Throwaway copy: install.sh writes next to itself and must not touch the real config.
+  const project = path.join(work, 'project');
+  fs.cpSync(path.join(ROOT, 'host'), path.join(project, 'host'), { recursive: true });
+  fs.copyFileSync(path.join(ROOT, 'install.sh'), path.join(project, 'install.sh'));
+  execFileSync(path.join(project, 'install.sh'), ['123'], { env: { ...process.env, CHROMIUM_DATA_DIR: profile } });
 
   const fake = startFakeDiscord(path.join(sockDir, 'discord-ipc-0'));
   await fake.listen();
   let clientClosed = false;
   fake.onClientClose = () => { clientClosed = true; };
 
-  const browser = spawn(HELIUM, [
+  const browser = spawn(BROWSER, [
     '--headless=new', `--user-data-dir=${profile}`, '--no-first-run',
     '--remote-debugging-port=0', '--disable-features=DisableLoadExtensionCommandLineSwitch',
     `--disable-extensions-except=${path.join(ROOT, 'extension')}`,
@@ -109,7 +111,6 @@ async function main() {
   } finally {
     browser.kill();
     await fake.close();
-    if (hadConfig) fs.writeFileSync(backupConfig, hadConfig); else fs.rmSync(backupConfig, { force: true });
     fs.rmSync(work, { recursive: true, force: true, maxRetries: 3 });
   }
 }
