@@ -10,8 +10,40 @@ esac
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 HOST_NAME="local.cstimer_discord_rpc"
 EXTENSION_ID="maceonlipciopmaiampojajefeebaibk"
-SUPPORT_DIR="$HOME/Library/Application Support"
 NODE="$(command -v node)"
+
+# Each browser reads manifests from its own data folder.
+case "$(uname -s)" in
+  Darwin)
+    DATA_ROOT="$HOME/Library/Application Support"
+    BROWSERS="Google/Chrome
+Google/Chrome Beta
+Google/Chrome Canary
+Chromium
+BraveSoftware/Brave-Browser
+Microsoft Edge
+Vivaldi
+Arc/User Data
+com.operasoftware.Opera
+net.imput.helium"
+    ;;
+  Linux)
+    DATA_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}"
+    BROWSERS="google-chrome
+google-chrome-beta
+google-chrome-unstable
+chromium
+BraveSoftware/Brave-Browser
+microsoft-edge
+vivaldi
+opera
+net.imput.helium"
+    ;;
+  *)
+    echo "Unsupported system. On Windows, use install.ps1." >&2
+    exit 1
+    ;;
+esac
 
 printf '{ "clientId": "%s" }\n' "$CLIENT_ID" > "$ROOT/host/config.json"
 
@@ -41,23 +73,13 @@ INSTALLED=0
 if [ -n "${CHROMIUM_DATA_DIR:-}" ]; then
   install_manifest "$CHROMIUM_DATA_DIR"
 else
-  # Each browser reads manifests from its own data folder.
   while IFS= read -r browser; do
-    if [ -d "$SUPPORT_DIR/$browser" ]; then
-      install_manifest "$SUPPORT_DIR/$browser"
+    if [ -d "$DATA_ROOT/$browser" ]; then
+      install_manifest "$DATA_ROOT/$browser"
     fi
-  done <<BROWSERS
-Google/Chrome
-Google/Chrome Beta
-Google/Chrome Canary
-Chromium
-BraveSoftware/Brave-Browser
-Microsoft Edge
-Vivaldi
-Arc/User Data
-com.operasoftware.Opera
-net.imput.helium
-BROWSERS
+  done <<LIST
+$BROWSERS
+LIST
 fi
 
 if [ "$INSTALLED" -eq 0 ]; then

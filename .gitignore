@@ -1,3 +1,5 @@
 node_modules/
 host/config.json
 host/run.sh
+host/run.bat
+host/local.cstimer_discord_rpc.json
