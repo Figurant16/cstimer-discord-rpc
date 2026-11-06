@@ -1,93 +1,93 @@
 # csTimer Discord RPC
 
-Affiche ton ao5, ton ao12 et ton dernier temps de [csTimer](https://cstimer.net) dans ton statut Discord.
+Shows your [csTimer](https://cstimer.net) ao5, ao12 and last solve in your Discord status.
 
-Le statut ressemble à ceci, avec le logo csTimer et la durée de la session :
+The status looks like this, with the csTimer logo and the session duration:
 
 ```
 csTimer
 ao5: 12.34 • ao12: 13.00
-Dernier temps : 11.22
+Last solve: 11.22
 ```
 
-Le projet fonctionne sur macOS avec [Helium](https://helium.computer) et l'application Discord de bureau. Il n'a aucune dépendance npm.
+The project runs on macOS with [Helium](https://helium.computer) and the Discord desktop app. It has no npm dependencies.
 
-## Fonctionnement
+## How it works
 
-Une extension seule ne peut pas parler à l'application Discord. Le projet a donc deux parties :
+An extension alone cannot talk to the Discord app, so the project has two parts:
 
 ```
-cstimer.net ──> extension Helium ──> programme local ──> application Discord
-              signal « avg »       Native Messaging    socket discord-ipc
+cstimer.net ──> Helium extension ──> native host ──> Discord app
+              "avg" signal        Native Messaging   discord-ipc socket
 ```
 
-- **L'extension** s'abonne au signal `avg` de csTimer et transmet les stats. Elle ne lit pas le HTML de la page.
-- **Le programme local** (`host/`) met ces stats en forme et les envoie à Discord par son socket local.
+- **The extension** subscribes to csTimer's `avg` signal and forwards the stats. It does not read the page HTML.
+- **The native host** (`host/`) formats the stats and sends them to Discord over its local socket.
 
-Tu n'as rien à lancer toi-même. Helium démarre le programme à la réception des premières stats et l'arrête à la fermeture du dernier onglet csTimer, ce qui retire le statut. Le programme ne tourne pas en permanence et n'ouvre aucun port réseau.
+You never start anything yourself. Helium starts the host when the first stats arrive and stops it when the last csTimer tab closes, which clears the status. The host does not run permanently and opens no network port.
 
 ## Installation
 
-Il te faut Node.js, Helium et l'application Discord de bureau.
+You need Node.js, Helium and the Discord desktop app.
 
-1. Crée une application sur le [portail développeur Discord](https://discord.com/developers/applications). Son nom sera le titre affiché sur ton profil.
-2. Copie son **Application ID**, puis lance :
+1. Create an application on the [Discord Developer Portal](https://discord.com/developers/applications). Its name becomes the title shown on your profile.
+2. Copy its **Application ID**, then run:
    ```sh
    ./install.sh <application_id>
    ```
-3. Dans Helium, ouvre `helium://extensions`, active le mode développeur, clique sur **Load unpacked** et choisis le dossier `extension`.
-4. Recharge cstimer.net, avec l'application Discord ouverte.
+3. In Helium, open `helium://extensions`, enable developer mode, click **Load unpacked** and select the `extension` folder.
+4. Reload cstimer.net with the Discord app open.
 
-`install.sh` écrit `host/config.json` et `host/run.sh`, ignorés par git, ainsi que le manifeste Native Messaging dans `~/Library/Application Support/net.imput.helium/NativeMessagingHosts/`.
+`install.sh` writes `host/config.json` and `host/run.sh`, both ignored by git, plus the Native Messaging manifest in `~/Library/Application Support/net.imput.helium/NativeMessagingHosts/`.
 
-Le manifeste enregistre le chemin du projet et celui de Node.js. Si l'un des deux change, relance `install.sh` et recharge l'extension.
+The generated files store the project path and the Node.js path. If either changes, run `install.sh` again and reload the extension.
 
-## Désinstallation
+## Uninstall
 
-1. Retire l'extension dans `helium://extensions`.
-2. Supprime le manifeste :
+1. Remove the extension from `helium://extensions`.
+2. Delete the manifest:
    ```sh
    rm "$HOME/Library/Application Support/net.imput.helium/NativeMessagingHosts/local.cstimer_discord_rpc.json"
    ```
-3. Supprime le dossier du projet.
+3. Delete the project folder.
 
-## Limites
+## Limitations
 
-- Les deux moyennes affichées sont les deux premières configurées dans csTimer : ao5 et ao12 par défaut.
-- Avant d'atteindre 5 ou 12 temps, la moyenne s'affiche `-`, ou en moyenne possible (`bpa5`) à un temps du compte.
-- Le statut reste visible tant qu'un onglet csTimer est ouvert, même si tu ne tournes plus.
-- Avec plusieurs onglets csTimer, le dernier onglet actif sur une résolution remplace le statut.
+- The two averages shown are the first two configured in csTimer: ao5 and ao12 by default.
+- Before reaching 5 or 12 solves, an average shows `-`, or the best possible average (`bpa5`) when one solve short.
+- The status stays visible while a csTimer tab is open, even if you stop solving.
+- With several csTimer tabs open, the tab that last recorded a solve sets the status.
 
-## Dépannage
+## Troubleshooting
 
-| Symptôme | À vérifier |
+| Symptom | What to check |
 |---|---|
-| Rien sur Discord | L'application Discord de bureau est ouverte, et le partage d'activité est activé dans ses réglages. |
-| Rien sur Discord malgré ça | Dans `helium://extensions`, ouvre le service worker de l'extension et lis sa console. |
-| `Specified native messaging host not found` | `install.sh` n'a pas été lancé, ou le dossier a été déplacé. |
-| `Access to the specified native messaging host is forbidden` | L'identifiant de l'extension ne correspond pas : le champ `key` de `manifest.json` a changé. |
+| Nothing on Discord | The Discord desktop app is open and activity sharing is enabled in its settings. |
+| Still nothing on Discord | In `helium://extensions`, open the extension's service worker and read its console. |
+| `Specified native messaging host not found` | `install.sh` was not run, or the folder was moved. |
+| `Access to the specified native messaging host is forbidden` | The extension ID does not match: the `key` field in `manifest.json` changed. |
 
-## Structure
+## Project layout
 
 ```
 extension/
-  page.js              lit le signal avg dans la page
-  bridge.js            relaie les stats vers le service worker
-  background.js        gère la connexion au programme local
+  page.js              reads the avg signal in the page
+  bridge.js            relays stats to the service worker
+  background.js        manages the native host connection
 host/
-  host.js              point d'entrée lancé par Helium
-  presence.js          met les stats en forme pour Discord
-  discord-ipc.js       client du socket Discord, avec reconnexion
-  native-messaging.js  protocole Native Messaging
-test/                  tests unitaires et test de bout en bout
-install.sh             installation du programme local
+  host.js              entry point started by Helium
+  presence.js          formats stats for Discord
+  discord-ipc.js       Discord socket client with reconnect
+  native-messaging.js  Native Messaging protocol
+test/                  unit and end-to-end tests
+install.sh             native host installer
 ```
 
 ## Tests
 
 ```sh
-npm test                  # tests unitaires et faux serveur Discord
-node test/e2e-helium.js   # vrai Helium (profil jetable) et vrai cstimer.net
+npm test                  # unit tests and fake Discord server
+node test/e2e-helium.js   # real Helium (throwaway profile) and real cstimer.net
 ```
 
-`e2e-helium.js` utilise un faux Discord et un profil temporaire : il ne touche ni à ton statut ni à ton profil Helium. Il réécrit `host/run.sh`, ce qui est sans effet tant que le projet ne bouge pas.
+`e2e-helium.js` uses a fake Discord and a temporary profile, so it touches neither your status nor your Helium profile.
