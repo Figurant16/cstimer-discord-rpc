@@ -12,6 +12,10 @@ Last solve: 11.22
 
 The project runs on macOS with the Discord desktop app and a Chromium-based browser: Chrome, Chromium, Brave, Edge, Vivaldi, Arc, Opera or Helium. Only Helium has been tested end to end. It has no npm dependencies.
 
+## Language
+
+The status follows your browser language by default. To change it, click the extension icon and pick one of the 10 available languages: English, French, Spanish, German, Portuguese, Italian, Russian, Chinese, Japanese or Korean.
+
 ## How it works
 
 An extension alone cannot talk to the Discord app, so the project has two parts:
@@ -78,9 +82,12 @@ extension/
   page.js              reads the avg signal in the page
   bridge.js            relays stats to the service worker
   background.js        manages the native host connection
+  popup.html, popup.js language menu
+  languages.js         languages listed in the menu
 host/
   host.js              entry point started by the browser
   presence.js          formats stats for Discord
+  languages.js         translated status text
   discord-ipc.js       Discord socket client with reconnect
   native-messaging.js  Native Messaging protocol
 test/                  unit and end-to-end tests
