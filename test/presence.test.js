@@ -48,3 +48,11 @@ test('ignore des moyennes qui ne sont pas du texte', () => {
   const a = buildActivity({ avg1: 42, avg2: null }, 1000);
   assert.equal(a.details, 'ao5: - • ao12: -');
 });
+
+test('affiche le logo csTimer comme image du statut', () => {
+  const a = buildActivity({ avg1: 'ao5: -', avg2: 'ao12: -' }, 1000);
+  assert.deepEqual(a.assets, {
+    large_image: 'https://cstimer.net/cstimer512x512.png',
+    large_text: 'csTimer',
+  });
+});

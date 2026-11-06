@@ -1,4 +1,5 @@
 const MAX_LEN = 128;
+const LOGO_URL = 'https://cstimer.net/cstimer512x512.png';
 
 function formatTime(raw) {
   if (!Array.isArray(raw)) return null;
@@ -23,6 +24,7 @@ function buildActivity({ avg1, avg2, last }, startedAt) {
     details: `${text(avg1, 'ao5: -')} • ${text(avg2, 'ao12: -')}`.slice(0, MAX_LEN),
     state: lastTime ? `Dernier temps : ${lastTime}` : 'Aucun temps pour le moment',
     timestamps: { start: startedAt },
+    assets: { large_image: LOGO_URL, large_text: 'csTimer' },
   };
 }
 
