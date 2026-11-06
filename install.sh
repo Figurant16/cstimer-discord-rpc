@@ -10,7 +10,7 @@ esac
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 HOST_NAME="local.cstimer_discord_rpc"
 EXTENSION_ID="maceonlipciopmaiampojajefeebaibk"
-DATA_DIR="${HELIUM_DATA_DIR:-$HOME/Library/Application Support/net.imput.helium}"
+SUPPORT_DIR="$HOME/Library/Application Support"
 NODE="$(command -v node)"
 
 printf '{ "clientId": "%s" }\n' "$CLIENT_ID" > "$ROOT/host/config.json"
@@ -22,8 +22,9 @@ exec "$NODE" "$ROOT/host/host.js"
 RUN
 chmod +x "$ROOT/host/run.sh"
 
-mkdir -p "$DATA_DIR/NativeMessagingHosts"
-cat > "$DATA_DIR/NativeMessagingHosts/$HOST_NAME.json" <<MANIFEST
+install_manifest() {
+  mkdir -p "$1/NativeMessagingHosts"
+  cat > "$1/NativeMessagingHosts/$HOST_NAME.json" <<MANIFEST
 {
   "name": "$HOST_NAME",
   "description": "csTimer Discord RPC",
@@ -32,5 +33,34 @@ cat > "$DATA_DIR/NativeMessagingHosts/$HOST_NAME.json" <<MANIFEST
   "allowed_origins": ["chrome-extension://$EXTENSION_ID/"]
 }
 MANIFEST
+  echo "Native host installed for: $1"
+  INSTALLED=$((INSTALLED + 1))
+}
 
-echo "Native host installed for Helium."
+INSTALLED=0
+if [ -n "${CHROMIUM_DATA_DIR:-}" ]; then
+  install_manifest "$CHROMIUM_DATA_DIR"
+else
+  # Each browser reads manifests from its own data folder.
+  while IFS= read -r browser; do
+    if [ -d "$SUPPORT_DIR/$browser" ]; then
+      install_manifest "$SUPPORT_DIR/$browser"
+    fi
+  done <<BROWSERS
+Google/Chrome
+Google/Chrome Beta
+Google/Chrome Canary
+Chromium
+BraveSoftware/Brave-Browser
+Microsoft Edge
+Vivaldi
+Arc/User Data
+com.operasoftware.Opera
+net.imput.helium
+BROWSERS
+fi
+
+if [ "$INSTALLED" -eq 0 ]; then
+  echo "No browser found. Set its data folder with CHROMIUM_DATA_DIR." >&2
+  exit 1
+fi
