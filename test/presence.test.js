@@ -56,3 +56,24 @@ test('shows the csTimer logo as the status image', () => {
     large_text: 'csTimer',
   });
 });
+
+test('translates the status into the chosen language', () => {
+  const stats = { avg1: 'ao5: 1', avg2: 'ao12: 1', last: [0, 11220] };
+  assert.equal(buildActivity({ ...stats, language: 'fr' }, 1000).state, 'Dernier temps : 11.22');
+  assert.equal(buildActivity({ ...stats, language: 'ja' }, 1000).state, '前回のタイム：11.22');
+});
+
+test('translates the empty session text', () => {
+  const a = buildActivity({ avg1: 'ao5: -', avg2: 'ao12: -', language: 'es' }, 1000);
+  assert.equal(a.state, 'Aún no hay tiempos');
+});
+
+test('accepts a regional browser language', () => {
+  const a = buildActivity({ avg1: 'ao5: -', avg2: 'ao12: -', language: 'pt-BR' }, 1000);
+  assert.equal(a.state, 'Ainda sem tempos');
+});
+
+test('falls back to the default language when unknown', () => {
+  const a = buildActivity({ avg1: 'ao5: -', avg2: 'ao12: -', language: 'xx' }, 1000);
+  assert.equal(a.state, 'No solves yet');
+});

@@ -1,3 +1,6 @@
+const { STRINGS } = require('./languages');
+
+const DEFAULT_LANGUAGE = 'en';
 const MAX_LEN = 128;
 const LOGO_URL = 'https://cstimer.net/cstimer512x512.png';
 
@@ -18,11 +21,17 @@ function formatTime(raw) {
 
 const text = (value, fallback) => (typeof value === 'string' && value ? value : fallback);
 
-function buildActivity({ avg1, avg2, last }, startedAt) {
+function stringsFor(language) {
+  const code = String(language).slice(0, 2).toLowerCase();
+  return STRINGS[code] ?? STRINGS[DEFAULT_LANGUAGE];
+}
+
+function buildActivity({ avg1, avg2, last, language }, startedAt) {
   const lastTime = formatTime(last);
+  const strings = stringsFor(language);
   return {
     details: `${text(avg1, 'ao5: -')} • ${text(avg2, 'ao12: -')}`.slice(0, MAX_LEN),
-    state: lastTime ? `Last solve: ${lastTime}` : 'No solves yet',
+    state: lastTime ? strings.last(lastTime) : strings.empty,
     timestamps: { start: startedAt },
     assets: { large_image: LOGO_URL, large_text: 'csTimer' },
   };
