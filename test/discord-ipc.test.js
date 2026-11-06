@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { DiscordClient } = require('../host/discord-ipc');
+const { DiscordClient, socketPaths } = require('../host/discord-ipc');
 const { startFakeDiscord } = require('./fake-discord');
 
 const sockDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'dipc-'));
@@ -52,4 +52,21 @@ test('reconnects on the next send after Discord drops', async () => {
   assert.equal(handshakes.length, 2);
   c.close();
   await fake.close();
+});
+
+test('uses named pipes on Windows', () => {
+  assert.equal(socketPaths('/ignored', 'win32')[0], '\\\\?\\pipe\\discord-ipc-0');
+});
+
+test('also looks for Flatpak and Snap Discord on Linux', () => {
+  const paths = socketPaths('/run/user/1000', 'linux');
+  assert.ok(paths.includes('/run/user/1000/discord-ipc-0'));
+  assert.ok(paths.includes('/run/user/1000/app/com.discordapp.Discord/discord-ipc-0'));
+  assert.ok(paths.includes('/run/user/1000/snap.discord/discord-ipc-0'));
+});
+
+test('only uses the temp folder on macOS', () => {
+  const paths = socketPaths('/tmp/x', 'darwin');
+  assert.equal(paths.length, 10);
+  assert.equal(paths[9], '/tmp/x/discord-ipc-9');
 });

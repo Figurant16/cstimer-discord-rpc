@@ -8,6 +8,15 @@ const OP_FRAME = 1;
 const OP_CLOSE = 2;
 const SOCKET_COUNT = 10;
 const REPLY_TIMEOUT_MS = 5000;
+// Discord installed through Flatpak or Snap puts its socket in a subfolder.
+const LINUX_SUBDIRS = ['', 'app/com.discordapp.Discord', 'snap.discord'];
+
+function socketPaths(dir, platform = process.platform) {
+  const indexes = [...Array(SOCKET_COUNT).keys()];
+  if (platform === 'win32') return indexes.map((i) => `\\\\?\\pipe\\discord-ipc-${i}`);
+  const dirs = platform === 'linux' ? LINUX_SUBDIRS.map((sub) => path.join(dir, sub)) : [dir];
+  return dirs.flatMap((folder) => indexes.map((i) => path.join(folder, `discord-ipc-${i}`)));
+}
 
 function connectSocket(file) {
   return new Promise((resolve, reject) => {
@@ -45,9 +54,9 @@ class DiscordClient {
   }
 
   async #connect() {
-    for (let i = 0; i < SOCKET_COUNT; i += 1) {
+    for (const file of socketPaths(this.#dir)) {
       try {
-        this.#attach(await connectSocket(path.join(this.#dir, `discord-ipc-${i}`)));
+        this.#attach(await connectSocket(file));
         await this.#request(OP_HANDSHAKE, { v: 1, client_id: this.#clientId });
         return;
       } catch (err) {
@@ -107,4 +116,4 @@ class DiscordClient {
   }
 }
 
-module.exports = { DiscordClient };
+module.exports = { DiscordClient, socketPaths };
