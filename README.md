@@ -2,13 +2,7 @@
 
 Shows your [csTimer](https://cstimer.net) ao5, ao12 and last solve in your Discord status.
 
-The status looks like this, with the csTimer logo and the session duration:
-
-```
-csTimer
-ao5: 12.34 • ao12: 13.00
-Last solve: 11.22
-```
+![csTimer status on a Discord profile, showing ao5, ao12, last solve and session duration](docs/presence.png)
 
 The project runs on macOS, Linux and Windows with the Discord desktop app and a Chromium-based browser: Chrome, Chromium, Brave, Edge, Vivaldi, Arc, Opera or Helium. Only macOS with Helium has been tested end to end. Linux and Windows support is untested. It has no npm dependencies.
 
