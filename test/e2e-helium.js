@@ -100,7 +100,7 @@ async function main() {
     console.log('Affiché par csTimer :', JSON.stringify(shown.result?.result?.value));
     assert.equal(fake.frames[0].data.client_id, '123');
     assert.match(activity.details, /^ao5: \d/);
-    assert.match(activity.state, /^Dernier temps : \d/);
+    assert.match(activity.state, /^Last solve: \d/);
 
     await fetch(`${base}/json/close/${created.id}`);
     await poll(() => clientClosed, 'connexion Discord fermée à la fermeture de l’onglet');

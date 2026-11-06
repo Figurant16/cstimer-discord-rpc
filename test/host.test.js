@@ -32,7 +32,7 @@ test('transforme un message de l’extension en statut Discord', async (t) => {
   host.stdin.write(encode({ avg1: 'ao5: 12.34', avg2: 'ao12: 13.00', last: [0, 11220] }));
   const f = await fake.waitFrame(isActivity);
   assert.equal(f.data.args.activity.details, 'ao5: 12.34 • ao12: 13.00');
-  assert.equal(f.data.args.activity.state, 'Dernier temps : 11.22');
+  assert.equal(f.data.args.activity.state, 'Last solve: 11.22');
   host.stdin.end();
   await exited(host);
 });

@@ -26,7 +26,7 @@ test('renvoie null quand le temps est absent ou invalide', () => {
 test('met les moyennes en details et le dernier temps en state', () => {
   const a = buildActivity({ avg1: 'ao5: 12.34', avg2: 'ao12: 13.00', last: [0, 11220] }, 1000);
   assert.equal(a.details, 'ao5: 12.34 • ao12: 13.00');
-  assert.equal(a.state, 'Dernier temps : 11.22');
+  assert.equal(a.state, 'Last solve: 11.22');
 });
 
 test('fixe le début de session au timestamp reçu', () => {
@@ -36,7 +36,7 @@ test('fixe le début de session au timestamp reçu', () => {
 
 test('indique l’absence de temps pour une session vide', () => {
   const a = buildActivity({ avg1: 'ao5: -', avg2: 'ao12: -' }, 1000);
-  assert.equal(a.state, 'Aucun temps pour le moment');
+  assert.equal(a.state, 'No solves yet');
 });
 
 test('tronque les textes reçus à la limite Discord de 128 caractères', () => {

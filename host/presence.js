@@ -22,7 +22,7 @@ function buildActivity({ avg1, avg2, last }, startedAt) {
   const lastTime = formatTime(last);
   return {
     details: `${text(avg1, 'ao5: -')} • ${text(avg2, 'ao12: -')}`.slice(0, MAX_LEN),
-    state: lastTime ? `Dernier temps : ${lastTime}` : 'Aucun temps pour le moment',
+    state: lastTime ? `Last solve: ${lastTime}` : 'No solves yet',
     timestamps: { start: startedAt },
     assets: { large_image: LOGO_URL, large_text: 'csTimer' },
   };
