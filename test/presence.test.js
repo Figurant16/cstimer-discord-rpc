@@ -29,6 +29,16 @@ test('puts averages in details and the last solve in state', () => {
   assert.equal(a.state, 'Last solve: 11.22');
 });
 
+test('shows the session name before the averages', () => {
+  const a = buildActivity({ session: '3x3', avg1: 'ao5: 12.34', avg2: 'ao12: 13.00' }, 1000);
+  assert.equal(a.details, '3x3 • ao5: 12.34 • ao12: 13.00');
+});
+
+test('ignores an empty or invalid session name', () => {
+  assert.equal(buildActivity({ session: '  ', avg1: 'ao5: 1', avg2: 'ao12: 1' }, 1000).details, 'ao5: 1 • ao12: 1');
+  assert.equal(buildActivity({ session: 3, avg1: 'ao5: 1', avg2: 'ao12: 1' }, 1000).details, 'ao5: 1 • ao12: 1');
+});
+
 test('uses the given timestamp as session start', () => {
   const a = buildActivity({ avg1: 'ao5: -', avg2: 'ao12: -' }, 1234);
   assert.deepEqual(a.timestamps, { start: 1234 });

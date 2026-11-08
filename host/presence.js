@@ -26,11 +26,13 @@ function stringsFor(language) {
   return STRINGS[code] ?? STRINGS[DEFAULT_LANGUAGE];
 }
 
-function buildActivity({ avg1, avg2, last, language }, startedAt) {
+function buildActivity({ session, avg1, avg2, last, language }, startedAt) {
   const lastTime = formatTime(last);
   const strings = stringsFor(language);
+  const averages = `${text(avg1, 'ao5: -')} • ${text(avg2, 'ao12: -')}`;
+  const name = typeof session === 'string' ? session.trim() : '';
   return {
-    details: `${text(avg1, 'ao5: -')} • ${text(avg2, 'ao12: -')}`.slice(0, MAX_LEN),
+    details: (name ? `${name} • ${averages}` : averages).slice(0, MAX_LEN),
     state: lastTime ? strings.last(lastTime) : strings.empty,
     timestamps: { start: startedAt },
     assets: { large_image: LOGO_URL, large_text: 'csTimer' },
