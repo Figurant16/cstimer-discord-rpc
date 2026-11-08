@@ -1,6 +1,6 @@
 # csTimer Discord RPC
 
-Shows your [csTimer](https://cstimer.net) ao5, ao12 and last solve in your Discord status.
+Shows your [csTimer](https://cstimer.net) session name, ao5, ao12 and last solve in your Discord status.
 
 ![csTimer status on a Discord profile, showing ao5, ao12, last solve and session duration](docs/presence.png)
 
@@ -21,7 +21,7 @@ cstimer.net ──> extension ──> native host ──> Discord app
               "avg" signal  Native Messaging  discord-ipc socket
 ```
 
-- **The extension** subscribes to csTimer's `avg` signal and forwards the stats. It does not read the page HTML.
+- **The extension** subscribes to csTimer's `avg` signal and forwards the stats with the current session name. It does not read the page HTML.
 - **The native host** (`host/`) formats the stats and sends them to Discord over its local socket.
 
 You never start anything yourself. The browser starts the host when the first stats arrive and stops it when the last csTimer tab closes, which clears the status. The host does not run permanently and opens no network port.
@@ -78,6 +78,7 @@ The generated files store the project path and the Node.js path. If either chang
 ## Limitations
 
 - The two averages shown are the first two configured in csTimer: ao5 and ao12 by default.
+- The session name is the one set in csTimer. An unnamed session shows its number, so rename your sessions (for example `3x3`, `4x4`) to tell events apart. A rename appears on Discord after the next solve or session switch.
 - Before reaching 5 or 12 solves, an average shows `-`, or the best possible average (`bpa5`) when one solve short.
 - The status stays visible while a csTimer tab is open, even if you stop solving.
 - With several csTimer tabs open, the tab that last recorded a solve sets the status.
